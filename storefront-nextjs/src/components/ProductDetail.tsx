@@ -231,7 +231,78 @@ export default function ProductDetail({
 
           {/* Printable Proforma overlay */}
           {calcResult && (
-            <div style={{ marginTop: '2.5rem' }} className="fadeIn">
+            <div style={{ marginTop: '2rem' }} className="fadeIn">
+              
+              {/* Dynamic Freight Optimization Grid */}
+              {calcResult.shippingOptions && (
+                <div style={{ marginTop: '1.5rem', marginBottom: '2rem' }}>
+                  <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    🚚 Dynamic Route Optimization Engine
+                  </div>
+                  
+                  {/* Telemetry row */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.6rem', marginBottom: '1rem', fontSize: '0.8rem', background: 'var(--bg-tertiary)', padding: '0.8rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                    <div>🗺️ Est. Distance: <strong style={{ color: 'var(--text-primary)' }}>{calcResult.distanceKm || 0} Km</strong></div>
+                    <div>⚖️ Billable Weight: <strong style={{ color: 'var(--text-primary)' }}>{calcResult.chargeableWeight || 0} Kg</strong></div>
+                    <div title={`Deadweight: ${calcResult.deadWeight} Kg | Volumetric: ${calcResult.volumetricWeight} Kg`}>
+                      📐 Vol. Weight: <strong style={{ color: 'var(--text-primary)' }}>{calcResult.volumetricWeight || 0} Kg</strong>
+                    </div>
+                  </div>
+
+                  {/* Multi-Carrier cards */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                    {calcResult.shippingOptions.map((opt) => {
+                      const isSelected = carrier.toLowerCase() === opt.carrier.toLowerCase();
+                      return (
+                        <div 
+                          key={opt.carrier}
+                          onClick={() => {
+                            setCarrier(opt.carrier);
+                            setTimeout(handleEscrowSizing, 50);
+                          }}
+                          style={{
+                            padding: '1rem',
+                            borderRadius: 'var(--radius-md)',
+                            border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)',
+                            background: isSelected ? 'var(--bg-secondary)' : 'var(--bg-secondary)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            boxShadow: isSelected ? '0 0 0 2px rgba(var(--primary-rgb), 0.1), 0 4px 12px rgba(0,0,0,0.05)' : 'none'
+                          }}
+                          className={`shipping-option-card ${isSelected ? 'active' : ''}`}
+                        >
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', textAlign: 'left' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              <strong style={{ color: 'var(--text-primary)', fontSize: '0.92rem' }}>{opt.name}</strong>
+                              {opt.isRecommended && (
+                                <span style={{ background: '#e6f4ea', color: '#137333', fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '10px', fontWeight: 800 }}>
+                                  ⭐ Recommended
+                                </span>
+                              )}
+                              {opt.isCheapest && (
+                                <span style={{ background: '#e8f0fe', color: '#1a73e8', fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '10px', fontWeight: 800 }}>
+                                  💎 Best Cost
+                                </span>
+                              )}
+                            </div>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Type: {opt.type} | Transit: ~{opt.transitDays} Days</span>
+                            {opt.recommendationReason && (
+                              <span style={{ fontSize: '0.72rem', color: '#0f766e', fontWeight: 500 }}>💡 {opt.recommendationReason}</span>
+                            )}
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <strong style={{ fontSize: '1.15rem', color: isSelected ? 'var(--primary)' : 'var(--text-primary)' }}>₹{opt.cost.toLocaleString('en-IN')}</strong>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="invoice-overlay">
                 <div className="invoice-header">
                   <div>

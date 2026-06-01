@@ -92,15 +92,12 @@ const sequelize = new Sequelize('inditrade', 'user', 'password', {
 
 ## 4. Production Security Hardening
 
-### CORS Origin Restriction
-In production, restrict API access exclusively to trusted storefront and administration domains. Do not use wildcard `*` origins:
-```javascript
-const allowedOrigins = [
-  "https://inditrade.com",
-  "https://admin.inditrade.com",
-  "https://store.inditrade.com"
-];
+### Dynamic CORS Origin Restriction
+In production, restrict API access exclusively to trusted storefront and administration domains. Do not use wildcard `*` origins. With our API-ready design, CORS origins are fed dynamically through the `ALLOWED_ORIGINS` environment variable in the host console or `.env` file as a comma-separated string:
+```env
+ALLOWED_ORIGINS=https://buyeway.vercel.app,https://admin.buyeway.com,https://buyeway.com
 ```
+This splits automatically on the backend and allows those exact domains, keeping local defaults (`localhost:3000`, etc.) safe.
 
 ### Secret Validation checks
 The gateway is configured to throw a fatal error and halt the execution loop on boot if a production environment variable is initialized without a custom, defined `JWT_SECRET`. This prevents deployment with vulnerable defaults.
@@ -119,9 +116,39 @@ To offload content Delivery and minimize latency across global manufacturing hub
 ```
 ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
 │  Client browser │ ───>  │  Edge CDN Node  │ ───>  │ Next.js Origin  │
-│                 │       │ (CloudFront/CF) │       │   Server/S3     │
+│                 │       │ (CloudFront/CF) │       │   S3/Origin     │
 └─────────────────┘       └─────────────────┘       └─────────────────┘
 ```
 
 1.  **Next.js Storefront Cache**: Deploy storefront endpoints behind global Edge CDNs (such as Amazon CloudFront or Cloudflare). Configure long-duration cache headers for built static JS chunks.
 2.  **S3 Object Storage for Images**: Public imagery and uploaded seller certificate documents must be hosted on secure object storages (such as Amazon S3) with read-only CDN distributions, keeping storage decoupled from gateway memory space.
+
+---
+
+## 6. Plug-and-Play Cloud Transition Guide
+
+BuyEway is engineered to transition from local-offline Docker Compose testing to online cloud staging or production with zero source code edits. When taking the services online, follow this layout:
+
+### A. Next.js Storefront (Vercel / Netlify)
+1. Link your `storefront-nextjs` folder to Vercel.
+2. Define these Environment Variables in your Vercel Dashboard:
+   - `NEXT_PUBLIC_GATEWAY_URL`: `https://api.yourdomain.com/api/v1` (Your live API URL)
+   - `NEXT_PUBLIC_COMPUTE_URL`: `https://compute.yourdomain.com` (Your live Go compute service)
+3. Vercel automatically bakes these URLs into the compiled static JavaScript bundle during compile.
+
+### B. Express Gateway (Railway / Render / AWS)
+1. Deploy the `gateway-nestjs` container.
+2. Set these Environment Variables in your cloud control panel:
+   - `PORT`: `8000` (or dynamic)
+   - `DATABASE_URL`: `postgresql://user:pass@your-managed-db:5432/buyeway`
+   - `DATABASE_SSL`: `true`
+   - `JWT_SECRET`: `[generate-a-secure-long-string]`
+   - `ALLOWED_ORIGINS`: `https://your-storefront.vercel.app` (Your Vercel URL)
+   - `COMPUTE_SERVICE_URL`: `https://compute-service-go-production.up.railway.app`
+   - `REDIS_URL`: `rediss://default:pass@your-redis-cloud:6379` (Secure Redis URL)
+
+### C. Go Compute Service (Railway / Render / GCP)
+1. Deploy the `compute-service-go` container (it is completely stateless and has zero dependencies).
+2. Set these Environment Variables:
+   - `PORT`: `8080` (or dynamic)
+3. Direct both the storefront and the Express gateway to point to this service's public address.

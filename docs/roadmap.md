@@ -1,7 +1,7 @@
 # 🗺️ BuyEway — Product Roadmap
 
 **Last Updated:** June 2, 2026  
-**Current Version:** v1.1.0
+**Current Version:** v1.2.0
 
 ---
 
@@ -24,7 +24,21 @@
 
 ---
 
-## 🟡 Phase 2 — Feature Enrichment (NEXT)
+## ✅ Phase 2 — API-Ready & Mathematical Logistics (COMPLETE)
+
+> **Status: Done as of v1.2.0**
+
+- [x] **Dynamic Environment-driven Variables**: Refactored `docker-compose.yml` to use default shell substitutions. Overridable at compile/run time.
+- [x] **Dynamic CORS Origins**: Expose gateway to configurable domains via the `ALLOWED_ORIGINS` env var, with offline local fallback lists.
+- [x] **Haversine Distance Calculus**: Native implementation of great-circle distance algorithm in Go.
+- [x] **Volumetric/Dimensional Freight Sizing**: Establishes weight calculations mapping volumetric densities per category.
+- [x] **Multi-Carrier Route Optimizer**: Calculates V-Trans, TCI, and Delhivery freight costs, recommending the best option.
+- [x] **Interactive Shipping Panel**: Integrated comparison cards in the storefront, allowing dynamically selectable carriage dispatches.
+- [x] **Telemetry HUD**: Displays Est. Distance, deadweight, and volumetric calculations inside the Proforma Invoice overlay.
+
+---
+
+## 🟡 Phase 3 — Feature Enrichment (NEXT)
 
 > **Priority order for upcoming development sessions**
 

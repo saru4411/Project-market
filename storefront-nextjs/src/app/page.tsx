@@ -26,6 +26,10 @@ import AuthModal from '../components/AuthModal';
 import IntentSelector from '../components/IntentSelector';
 import SellerOnboarding from '../components/SellerOnboarding';
 import AdminDashboard from '../components/AdminDashboard';
+import BecknSourcing from '../components/BecknSourcing';
+import SourcingRadar from '../components/SourcingRadar';
+import AiHsnExpert from '../components/AiHsnExpert';
+import SafeTradeEscrow from '../components/SafeTradeEscrow';
 
 // Centralized API client — single source of truth for URLs & session storage
 import { GATEWAY_URL, COMPUTE_URL, STORAGE_KEYS, logoutApi } from '@/lib/apiClient';
@@ -977,6 +981,22 @@ export default function StorefrontPortal() {
               triggerAlert('Sourcing escrow details successfully compiled and downloaded.');
             }}
           />
+        )}
+
+        {activeTab === 'beckn-sourcing' && (
+          <BecknSourcing />
+        )}
+
+        {activeTab === 'sourcing-radar' && (
+          <SourcingRadar />
+        )}
+
+        {activeTab === 'ai-hsn-expert' && (
+          <AiHsnExpert />
+        )}
+
+        {activeTab === 'safetrade-orders' && (
+          <SafeTradeEscrow />
         )}
 
       </main>

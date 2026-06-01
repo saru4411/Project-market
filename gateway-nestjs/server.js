@@ -28,9 +28,11 @@ const ProductController = require('./controllers/ProductController');
 const RfqController = require('./controllers/RfqController');
 const OrderController = require('./controllers/OrderController');
 const AuthController = require('./controllers/AuthController');
+const BecknController = require('./controllers/BecknController');
 
 // Import Auth Middlewares
 const { verifyToken, requireRole } = require('./middlewares/auth');
+const { verifyBecknSignature } = require('./middlewares/becknSecurity');
 
 const rateLimit = require('express-rate-limit');
 
@@ -71,20 +73,29 @@ app.use(helmet({
 app.use(pinoHttp({ logger }));
 app.use(metricsMiddleware);
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : [
+      'http://localhost:3000',
+      'http://localhost:80',
+      'http://localhost',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1',
+    ];
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:80',
-    'http://localhost',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1',
-  ],
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(cookieParser());
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ 
+  limit: '1mb',
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 app.use('/api/v1/', limiter);
 
 // Serve static frontend assets
@@ -154,6 +165,19 @@ app.post('/api/v1/rfqs/:id/bids', verifyToken, requireRole('supplier'), (req, re
 // Escrow Transaction Routes
 app.post('/api/v1/orders', verifyToken, (req, res) => OrderController.create(req, res));
 app.get('/api/v1/orders', verifyToken, (req, res) => OrderController.list(req, res));
+
+// Core ONDC/Beckn Protocol Routes
+app.post('/api/v1/beckn/search', verifyToken, (req, res) => BecknController.search(req, res));
+app.post('/api/v1/beckn/select', verifyToken, (req, res) => BecknController.select(req, res));
+app.post('/api/v1/beckn/init', verifyToken, (req, res) => BecknController.init(req, res));
+app.post('/api/v1/beckn/confirm', verifyToken, (req, res) => BecknController.confirm(req, res));
+app.get('/api/v1/beckn/results', verifyToken, (req, res) => BecknController.getResults(req, res));
+
+// Inbound Async Webhooks (Stand-alone verifiers)
+app.post('/api/v1/beckn/on_search', verifyBecknSignature, (req, res) => BecknController.onSearch(req, res));
+app.post('/api/v1/beckn/on_select', verifyBecknSignature, (req, res) => BecknController.onSelect(req, res));
+app.post('/api/v1/beckn/on_init', verifyBecknSignature, (req, res) => BecknController.onInit(req, res));
+app.post('/api/v1/beckn/on_confirm', verifyBecknSignature, (req, res) => BecknController.onConfirm(req, res));
 
 // Global Error Handler Middleware
 app.use((err, req, res, next) => {

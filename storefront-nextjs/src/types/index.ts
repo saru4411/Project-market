@@ -102,11 +102,26 @@ export interface User {
 
 // ── Escrow / Compute Service Types ───────────────────────────
 
+export interface ShippingOption {
+  carrier: string;
+  name: string;
+  cost: number;
+  transitDays: number;
+  type: string;
+  isRecommended: boolean;
+  isCheapest: boolean;
+  recommendationReason?: string;
+}
+
 export interface CalcSuborder {
   productName: string;
   quantity: number;
   subtotal: number;
   taxType: string;
+  orderCode?: string;
+  tax?: number;
+  freight?: number;
+  total?: number;
 }
 
 export interface CalcResult {
@@ -115,7 +130,13 @@ export interface CalcResult {
   grandTax: number;
   grandFreight: number;
   grandTotal: number;
+  message?: string;
   suborders?: CalcSuborder[];
+  shippingOptions?: ShippingOption[];
+  distanceKm?: number;
+  chargeableWeight?: number;
+  deadWeight?: number;
+  volumetricWeight?: number;
 }
 
 // ── UI / Domain Constants ─────────────────────────────────────
@@ -138,7 +159,11 @@ export type ActiveTab =
   | 'supplier-dashboard'
   | 'intent-selector'
   | 'seller-onboarding'
-  | 'admin-dashboard';
+  | 'admin-dashboard'
+  | 'beckn-sourcing'
+  | 'sourcing-radar'
+  | 'ai-hsn-expert'
+  | 'safetrade-orders';
 
 export type DetailTab = 'description' | 'supplier' | 'shipping';
 

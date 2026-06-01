@@ -44,12 +44,11 @@ BuyEway is an enterprise-grade, modular B2B wholesale marketplace for regional I
 ```
 
 ### ⚠️ Critical Networking Rule (MUST READ)
-> `NEXT_PUBLIC_*` environment variables in Next.js are **baked into the JavaScript bundle at Docker build time**, not at runtime. They must be passed as `ARG` in the Dockerfile builder stage AND as `build.args` in docker-compose.yml.
+> `NEXT_PUBLIC_*` environment variables in Next.js are **baked into the JavaScript bundle at Docker build time**, not at runtime.
 >
-> The browser runs on the **user's host machine**, not inside Docker. It cannot resolve internal Docker hostnames like `node-gateway` or `nextjs-storefront`. It can only reach **exposed host ports**: `3000`, `8000`, `8080`, `80`.
->
-> Correct URL pattern: `http://localhost:8000/api/v1` (absolute, using host-exposed port)  
-> Wrong URL pattern: `/api/v1` (relative — Next.js serves its own 404 HTML page for unknown routes)
+> In our **v1.2.0 API-Ready Architecture**, these parameters are configured in `docker-compose.yml` to use dynamic shell variable substitution (`${NEXT_PUBLIC_GATEWAY_URL:-http://localhost:8000/api/v1}`). 
+> - Developers can completely override backend destinations at build time simply by defining `NEXT_PUBLIC_GATEWAY_URL` in the root `.env` or CI/CD pipelines (e.g. Vercel) without editing source files.
+> - The browser executes on the **user's host machine**, not inside Docker. Absolute URLs are required during local builds to prevent browser requests from failing. When taken online, Nginx proxy pathways or dedicated API domains can be dynamically injected.
 
 ---
 
@@ -99,13 +98,17 @@ nextjs-storefront → HEALTHY
 - **Entry:** `server.js`
 - **Auth Routes:** `POST /api/v1/auth/login`, `POST /api/v1/auth/register`, `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`, `POST /api/v1/auth/verify-buyer`
 - **Seller Onboarding:** `POST /api/v1/auth/seller-step1`, `POST /api/v1/auth/seller-step2`, `POST /api/v1/auth/seller-approve`
-- **CORS:** Explicitly allows `http://localhost:3000`, `http://localhost`, `http://127.0.0.1:3000`
+- **CORS:** Dynamically parses allowed origins from `process.env.ALLOWED_ORIGINS` (comma-separated list), falling back to local sandboxes if omitted.
 - **Rate Limiting:** 100 req/15min general, 5 req/15min on auth endpoints
 
 ### 🧮 Go Compute Service (`/compute-service-go`)
 - **Stack:** Go 1.20, zero-dependency native `net/http`
 - **Endpoint:** `POST /calculate`
-- **Logic:** MOQ tier pricing, CGST/SGST (intrastate) vs IGST (interstate), carrier freight rates
+- **Mathematical Logistics Features (v1.2.0)**:
+  - **Haversine Formula**: Computes physical route transport distance in kilometers between coordinates (lat/long) mapped for supplier cluster hubs and buyer logistics terminals.
+  - **Volumetric Package Density**: Computes chargeable volumetric weight using estimated packing dimensions per category (e.g. bulky textiles vs. compact ceramics).
+  - **Dynamic Multi-Carrier Model**: Evaluates Road LTL (V-Trans), Bulk Economy (TCI), and Air Express (Delhivery) freight rates.
+  - **Algorithmic Selection**: Identifies cheapest and recommended options, returning full comparison options to the storefront client.
 
 ---
 

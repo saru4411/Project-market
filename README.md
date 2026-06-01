@@ -1,7 +1,7 @@
 # 🏭 BuyEway — B2B Wholesale Sourcing & Escrow Marketplace
 
-**Version:** v1.1.0  
-**Status:** ✅ Stable — Auth, infrastructure, and core platform fully functional  
+**Version:** v1.2.0  
+**Status:** ✅ Stable — API-Ready plug-and-play architecture & optimized freight calculations  
 **Last Updated:** June 2, 2026
 
 BuyEway is an enterprise-grade B2B wholesale marketplace for Indian manufacturing clusters. It enables bulk procurement sourcing, verified seller onboarding, RFQ bidding, and secure SafeTrade escrow contracts with automated GST and freight calculation.

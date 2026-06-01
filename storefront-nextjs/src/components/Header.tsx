@@ -96,6 +96,30 @@ export default function Header({
                 RFQ Market Board
                 <span className="badge-pill">{rfqsCount}</span>
               </span>
+              <span 
+                className={`nav-link ${activeTab === 'beckn-sourcing' ? 'active' : ''}`}
+                onClick={() => { setActiveTab('beckn-sourcing'); setSelectedProductId(null); }}
+              >
+                ONDC Sourcing
+              </span>
+              <span 
+                className={`nav-link ${activeTab === 'sourcing-radar' ? 'active' : ''}`}
+                onClick={() => { setActiveTab('sourcing-radar'); setSelectedProductId(null); }}
+              >
+                Sourcing Radar
+              </span>
+              <span 
+                className={`nav-link ${activeTab === 'ai-hsn-expert' ? 'active' : ''}`}
+                onClick={() => { setActiveTab('ai-hsn-expert'); setSelectedProductId(null); }}
+              >
+                AI Expert
+              </span>
+              <span 
+                className={`nav-link ${activeTab === 'safetrade-orders' ? 'active' : ''}`}
+                onClick={() => { setActiveTab('safetrade-orders'); setSelectedProductId(null); }}
+              >
+                SafeTrade Escrow
+              </span>
               {user && user.role === 'admin' && (
                 <span 
                   className={`nav-link ${activeTab === 'admin-dashboard' ? 'active' : ''}`}

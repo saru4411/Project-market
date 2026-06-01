@@ -4,6 +4,47 @@
 
 ---
 
+## [v1.2.0] — API-Ready & Mathematical Logistics Engine
+**Date:** June 2, 2026  
+**Status:** ✅ Released. Dynamic plug-and-play architecture & optimized freight calculations.
+
+### Summary
+This milestone introduces dynamic plug-and-play environmental configuration, preparing the platform for frictionless cloud deployment. It also significantly refines the logistics layer with a sophisticated mathematical logistics and freight optimization engine.
+
+### Major Enhancements
+
+#### 1. Dynamic API-Ready Architecture
+- **Environment Isolation**: Refactored `docker-compose.yml` to pull Next.js build-time arguments (`NEXT_PUBLIC_GATEWAY_URL` and `NEXT_PUBLIC_COMPUTE_URL`) and backend microservice dependencies (`COMPUTE_SERVICE_URL` and `REDIS_URL`) from environment variables with robust local defaults.
+- **Dynamic CORS Origin List**: Gateway refactored to read CORS allowed origins dynamically from a comma-separated list (`process.env.ALLOWED_ORIGINS`) rather than relying on a hardcoded localhost array.
+- **Environment Reference**: Added `.env.example` to document local sandbox configurations and illustrate how to swap variables to deploy the storefront to Vercel and the backend to Railway/GCP in minutes.
+
+#### 2. Advanced Mathematical Logistics Engine (Go Compute Service)
+- **Geographic Distance Sizing**: Configured exact coordinate maps (latitude/longitude) for supplier hubs (Surat, Morbi, Tirupur, Aligarh, Assam, Moradabad) and buyer states. Integrated the Haversine great-circle formula to calculate route transit distance in kilometers dynamically.
+- **Volumetric Weight Profiling**: Implemented chargeable weight mapping comparing physical deadweight against volumetric density based on industrial categories (e.g. textiles are bulky but light; ceramics are dense and heavy).
+- **Multi-Carrier Cost Models**: Integrated dynamic cost functions for three major transport modes:
+  - **V-Trans (Road LTL)**: Minimum billing weight of 50kg, ₹300 booking fee, ₹0.006/kg/km.
+  - **TCI Freight (Bulk Economy)**: Minimum billing weight of 200kg, ₹600 booking fee, ₹0.0035/kg/km.
+  - **Delhivery Express (Air Cargo)**: Minimum billing weight of 10kg, ₹180 booking fee, ₹0.016/kg/km.
+- **Logistics Recommendation Engine**: Automatically computes freight options for all three carriers simultaneously. Evaluates the cheapest and most suitable selections, passing a recommendation reason back to the client while keeping 100% backwards compatibility for existing order gateways.
+
+#### 3. Interactive Storefront Shipping Optimization Grid
+- **Interactive Carriage Selection**: Refactored `ProductDetail.tsx` to display an elegant dynamic shipping options comparison grid card panel when calculations are active.
+- **Telemetry Display**: Renders computed great-circle distance (Km), deadweight, volumetric weight, and the final billable chargeable weight.
+- **Reactive UI**: Allows buyers to click any carrier option card to instantly recalculate totals, tax, and update the checkout invoice in real-time.
+
+### Files Changed in v1.2.0
+| File | Change |
+|------|--------|
+| `docker-compose.yml` | Swapped hardcoded ports and URLs for dynamic shell variable substitutions |
+| `gateway-nestjs/server.js` | Refactored CORS to parse process.env.ALLOWED_ORIGINS |
+| `compute-service-go/main.go` | Implemented Haversine math, density volumes, carrier engines, and optimization outputs |
+| `storefront-nextjs/src/types/index.ts` | Expanded CalcResult, CalcSuborder, and added ShippingOption interfaces |
+| `storefront-nextjs/src/components/ProductDetail.tsx` | Added advanced carriage cards, telemetry HUD, and reactive click recalculators |
+| `.env` | Added dynamic variables template config |
+| `.env.example` | New environment template file created |
+
+---
+
 ## [v1.1.0] — Auth & Infrastructure Stabilization
 **Date:** June 2, 2026  
 **Status:** ✅ Stable. All auth flows verified end-to-end.

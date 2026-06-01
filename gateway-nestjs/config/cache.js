@@ -53,6 +53,11 @@ function getClient() {
 async function cacheGet(key) {
   try {
     const redis = getClient();
+    const type = await redis.type(key);
+    if (type === 'list') {
+      const rawList = await redis.lrange(key, 0, -1);
+      return rawList.map(item => JSON.parse(item));
+    }
     const raw = await redis.get(key);
     return raw ? JSON.parse(raw) : null;
   } catch {
@@ -70,6 +75,22 @@ async function cacheSet(key, value, ttl = 60) {
   try {
     const redis = getClient();
     await redis.set(key, JSON.stringify(value), 'EX', ttl);
+  } catch {
+    // degraded gracefully
+  }
+}
+
+/**
+ * Append a value to a cached array atomically (useful for distributed webhooks).
+ * @param {string} key
+ * @param {any} value
+ * @param {number} [ttl=300]
+ */
+async function cacheAppend(key, value, ttl = 300) {
+  try {
+    const redis = getClient();
+    await redis.rpush(key, JSON.stringify(value));
+    await redis.expire(key, ttl);
   } catch {
     // degraded gracefully
   }
@@ -105,4 +126,4 @@ async function closeCache() {
   }
 }
 
-module.exports = { cacheGet, cacheSet, cacheInvalidate, closeCache };
+module.exports = { cacheGet, cacheSet, cacheAppend, cacheInvalidate, closeCache };
