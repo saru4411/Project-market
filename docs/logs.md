@@ -181,3 +181,26 @@ build:
     NEXT_PUBLIC_GATEWAY_URL: http://localhost:8000/api/v1
     NEXT_PUBLIC_COMPUTE_URL: http://localhost:8080
 ```
+
+## [v1.2.1] - Enterprise Features & Security Hardening
+**Date:** June 2, 2026
+**Status:** ? Released. Beckn ONDC protocol Engine, Escrow UI, and Security Patches.
+
+### Summary
+This release expands the platform's robust feature set for enterprise usage and hardens the architecture against vulnerabilities.
+
+### Major Enhancements
+
+#### 1. Core Beckn Protocol Engine (ONDC)
+- **Asynchronous Gateway Handlers**: Outbound controllers built for /search, /select, /init, and /confirm. Configured standalone, high-performance listening webhooks (/on_search, /on_select, /on_init, /on_confirm) to accept asynchronous responses from Indian supplier nodes.
+- **State Machine Caching**: Integrated a Redis cache layer. Assigned unique 	ransaction_id tracking tokens for incoming server payloads, allowing the frontend to securely poll live results.
+
+#### 2. Enterprise B2B Features (UI/UX)
+- **Sourcing Radar**: Built an interactive map telemetry view.
+- **AI HSN Expert**: Added an AI-powered classification and tax ledger UI component.
+- **SafeTrade Escrow**: Developed smart contract and dispute resolution workspace interface.
+
+#### 3. Cryptographic Security & Stability Patch (Autonomous Audit fixes)
+- **Cryptographic Validation Bypass Fix**: Mitigated a BLAKE2b-512 signature bypass vulnerability by extracting exact raw Buffer payloads via Express's erify hook, guarding against JSON serialization distortion.
+- **Cache Race Condition Fix**: Refactored Redis array mutations (setCachedData) into atomic list operations (push via cacheAppend) inside BecknController.js to ensure concurrent supplier webhooks do not cause catastrophic catalog data loss.
+

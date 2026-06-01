@@ -1,4 +1,4 @@
-# 🏛️ BuyEway Architecture Guide — v1.1
+# 🏛️ BuyEway Architecture Guide — v1.2
 
 **Last Updated:** June 2, 2026  
 **Status:** ✅ Production-stable local stack. Auth fully functional.
@@ -92,12 +92,19 @@ nextjs-storefront → HEALTHY
   - `AdminDashboard.tsx` — Admin approval console
   - `SellerOnboarding.tsx` — Multi-step seller onboarding wizard
   - `ProductDetail.tsx` — Product detail + escrow calculator
+  - `SourcingRadar.tsx` — Interactive map with sourcing telemetry
+  - `AiHsnExpert.tsx` — AI-powered product classification and GST mapping
+  - `SafeTradeEscrow.tsx` — Escrow contract lifecycle UI
+  - `BecknSourcing.tsx` — Decentralized catalog search over Beckn Protocol
 
 ### 🔌 API Gateway (`/gateway-nestjs`)
 - **Stack:** Node.js 18, Express, Sequelize ORM, PostgreSQL/SQLite, bcryptjs, jsonwebtoken
 - **Entry:** `server.js`
 - **Auth Routes:** `POST /api/v1/auth/login`, `POST /api/v1/auth/register`, `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`, `POST /api/v1/auth/verify-buyer`
 - **Seller Onboarding:** `POST /api/v1/auth/seller-step1`, `POST /api/v1/auth/seller-step2`, `POST /api/v1/auth/seller-approve`
+- **Beckn Protocol Engine (ONDC):** Handled by `BecknController.js`. Supports decentralized B2B network webhooks (`/search`, `/select`, `/init`, `/confirm`).
+- **Cryptographic Security:** Middleware `becknSecurity.js` intercepts raw buffers and executes strict BLAKE2b-512 + Ed25519 signature validations on external supplier payloads.
+- **Cache Resiliency:** Redis caching configured for atomic `rpush` array aggregations via `cacheAppend()` to prevent distributed race conditions.
 - **CORS:** Dynamically parses allowed origins from `process.env.ALLOWED_ORIGINS` (comma-separated list), falling back to local sandboxes if omitted.
 - **Rate Limiting:** 100 req/15min general, 5 req/15min on auth endpoints
 
