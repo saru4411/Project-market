@@ -1,0 +1,22 @@
+{
+  "name": "inditrade-b2b-enterprise",
+  "version": "1.0.0",
+  "description": "Layered Enterprise B2B Wholesale Sourcing Marketplace",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "pg": "^8.11.5",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.3",
+    "sqlite3": "^5.1.7"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "IndiTrade B2B Sourcing",
+  "license": "ISC"
+}

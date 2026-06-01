@@ -1,0 +1,12 @@
+# Docker Ignore - Next.js Storefront Service
+node_modules
+.next
+out
+npm-debug.log*
+.git
+.gitignore
+.env
+.env.local
+.DS_Store
+Dockerfile
+docker-compose.yml

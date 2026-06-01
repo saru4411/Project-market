@@ -1,0 +1,35 @@
+{
+  "name": "buyeway-b2b-enterprise",
+  "version": "1.0.0",
+  "description": "Layered Enterprise B2B Wholesale Sourcing Marketplace",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/auth.test.js tests/integration.test.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.2.0",
+    "helmet": "^8.0.0",
+    "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.5",
+    "pg-hstore": "^2.3.4",
+    "pino": "^9.0.0",
+    "pino-http": "^10.0.0",
+    "prom-client": "^15.1.0",
+    "sequelize": "^6.37.3",
+    "sqlite3": "^5.1.7",
+    "zod": "^3.23.8",
+    "@sentry/node": "^7.114.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "IndiTrade B2B Sourcing",
+  "license": "ISC"
+}

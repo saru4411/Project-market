@@ -1,0 +1,1212 @@
+openapi: 3.0.3
+info:
+  title: IndiTrade B2B Sourcing & Escrow Enterprise API
+  description: |
+    Enterprise-grade, highly secure, modular B2B wholesale marketplace API for manufacturing clusters and large-scale bulk procurement.
+    Coordinates buyer verification (DigiLocker Aadhaar e-KYC), progressive seller onboarding (GSTIN & certificate vetting), active RFQ sourcing bidding feeds, and secure SafeTrade escrow contracts with weight-based freight carriage and interstate tax classifications.
+  version: 1.0.0
+  contact:
+    name: IndiTrade Support
+    email: support@inditrade.com
+servers:
+  - url: http://localhost:8000
+    description: Local Dev Sandbox Gateway
+  - url: https://api.inditrade.com
+    description: Production API Gateway
+paths:
+  /health:
+    get:
+      summary: System Health Check
+      description: Returns the status of the API gateway and checks relational database connection health.
+      responses:
+        '200':
+          description: System is operational.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  database:
+                    type: string
+                    example: connected
+        '500':
+          description: System is unhealthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: unhealthy
+                  error:
+                    type: string
+                    example: Connection refused
+
+  /api/v1/hubs:
+    get:
+      summary: Retrieve Manufacturing Clusters
+      description: Returns a curated list of active regional industrial manufacturing hubs in India.
+      responses:
+        '200':
+          description: List of hubs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Hub'
+
+  /api/v1/auth/register:
+    post:
+      summary: Register New User
+      description: Registers a new platform user. By default, accounts are created with a `buyer` role, `none` seller onboarding status, and unverified KYC.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+                - location
+              properties:
+                name:
+                  type: string
+                  example: Kunal Sen
+                email:
+                  type: string
+                  format: email
+                  example: kunal@hub.in
+                password:
+                  type: string
+                  format: password
+                  example: securePassword123
+                location:
+                  type: string
+                  example: Surat, Gujarat
+      responses:
+        '201':
+          description: User registered successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT auth claim token.
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  user:
+                    $ref: '#/components/schemas/User'
+                  message:
+                    type: string
+                    example: Onboarded onto IndiTrade successfully!
+        '400':
+          description: Invalid payload or email already exists.
+
+  /api/v1/auth/login:
+    post:
+      summary: User Login
+      description: Authenticates user credentials and returns a JWT claim token. Rate limited to 5 attempts per 15 minutes per IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: seller@inditrade.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+      responses:
+        '200':
+          description: Authentication successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  user:
+                    $ref: '#/components/schemas/User'
+                  message:
+                    type: string
+                    example: Welcome back to IndiTrade!
+        '401':
+          description: Invalid credentials.
+        '429':
+          description: Too many login attempts.
+
+  /api/v1/auth/me:
+    get:
+      summary: Retrieve Profile details
+      description: Resolves the active user session and returns current profile details.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user profile details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized session token.
+
+  /api/v1/auth/verify-buyer:
+    post:
+      summary: Aadhaar Digital KYC Verification
+      description: Simulates dynamic Aadhaar/PAN validation via DigiLocker authentication to grant RFQ posting privileges.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: KYC verification successfully updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 3
+                      isKycVerified:
+                        type: boolean
+                        example: true
+                  message:
+                    type: string
+                    example: Aadhaar & PAN Digital KYC verification completed successfully!
+        '401':
+          description: Unauthorized.
+
+  /api/v1/auth/seller-step1:
+    post:
+      summary: Seller Onboarding - Profile Info (Step 1)
+      description: Submits corporate profile info and updates registration status to `pending_docs`. Validates GSTIN matching standard format.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - companyName
+                - gstin
+                - iso
+              properties:
+                companyName:
+                  type: string
+                  example: Apex Castings Pvt Ltd
+                gstin:
+                  type: string
+                  minLength: 15
+                  maxLength: 15
+                  example: 24XYZ9876A1Z3BB
+                iso:
+                  type: string
+                  example: ISO 9001:2015
+      responses:
+        '200':
+          description: Onboarding profile accepted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  message:
+                    type: string
+                    example: Seller Profile Info saved successfully. Proceed to upload certificates.
+        '400':
+          description: Validation failed (e.g. invalid GSTIN format).
+        '401':
+          description: Unauthorized.
+
+  /api/v1/auth/seller-step2:
+    post:
+      summary: Seller Onboarding - Document Vetting (Step 2)
+      description: Uploads/submits simulated documents for administrative review. Advances user state to `pending_approval`.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Documents submitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  message:
+                    type: string
+                    example: Documents submitted successfully. Awaiting admin approval.
+        '401':
+          description: Unauthorized.
+
+  /api/v1/auth/seller-pending:
+    get:
+      summary: List Pending Seller Registrations
+      description: Returns the real-time queue of seller profiles currently awaiting administrative approval. Restricted to administrative users.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of pending profiles.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden. Admin access required.
+
+  /api/v1/auth/seller-approve:
+    post:
+      summary: Approve Seller Registration
+      description: Approves a pending seller application, shifting their platform role to `supplier` and provisioning their Supplier catalog profile. Restricted to administrators.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: integer
+                  example: 5
+      responses:
+        '200':
+          description: User successfully approved and upgraded to Supplier.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Seller successfully approved and upgraded to Supplier!
+        '400':
+          description: Invalid user or user not in pending state.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden. Admin access required.
+
+  /api/v1/suppliers:
+    post:
+      summary: Direct Onboard Supplier
+      description: Enforces Zod validation parsing to directly register a corporate supplier entity in the database catalog.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - location
+                - stateName
+                - gstin
+                - iso
+              properties:
+                name:
+                  type: string
+                  example: Gujarat Handloom & Silk Weaves
+                location:
+                  type: string
+                  example: Surat, Gujarat
+                stateName:
+                  type: string
+                  example: Gujarat
+                gstin:
+                  type: string
+                  example: 24AAAFF1234F1Z5
+                iso:
+                  type: string
+                  example: ISO 9001:2015
+      responses:
+        '201':
+          description: Supplier registered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+        '400':
+          description: Validation error.
+
+    get:
+      summary: Retrieve Supplier List
+      description: Returns a complete list of vetted B2B suppliers on the platform. Supports standardized pagination, sorting, and filtering options.
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of records to return.
+          required: false
+          schema:
+            type: integer
+            default: 10
+            example: 10
+        - name: offset
+          in: query
+          description: Number of records to skip.
+          required: false
+          schema:
+            type: integer
+            default: 0
+            example: 0
+        - name: cursor
+          in: query
+          description: Reference ID for cursor-based pagination.
+          required: false
+          schema:
+            type: string
+            example: 2
+        - name: sortBy
+          in: query
+          description: Field name to sort by.
+          required: false
+          schema:
+            type: string
+            enum: [id, name, joined, trustScore, createdAt]
+            default: id
+        - name: sortOrder
+          in: query
+          description: Sort order direction.
+          required: false
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: DESC
+        - name: location
+          in: query
+          description: Physical location city filter.
+          required: false
+          schema:
+            type: string
+            example: Surat
+        - name: state
+          in: query
+          description: State name filter.
+          required: false
+          schema:
+            type: string
+            example: Gujarat
+        - name: search
+          in: query
+          description: Text search matching name, location, or state.
+          required: false
+          schema:
+            type: string
+            example: Weaves
+      responses:
+        '200':
+          description: Supplier catalog list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Supplier'
+
+  /api/v1/products:
+    post:
+      summary: Create Wholesale Listing
+      description: Registers a new wholesale listing. Provisions tiered MOQ volume discount bands. Restricted to approved Suppliers.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - category
+                - hub
+                - weightPerUnit
+                - moq
+                - priceMax
+                - priceMin
+                - hsn
+                - description
+              properties:
+                name:
+                  type: string
+                  example: Premium Combed T-Shirts
+                category:
+                  type: string
+                  example: Textiles & Garments
+                hub:
+                  type: string
+                  example: tirupur
+                weightPerUnit:
+                  type: number
+                  format: float
+                  example: 0.22
+                moq:
+                  type: integer
+                  example: 200
+                priceMax:
+                  type: number
+                  example: 120
+                priceMin:
+                  type: number
+                  example: 85
+                hsn:
+                  type: string
+                  example: 61091000
+                description:
+                  type: string
+                  example: 100% bio-washed cotton wholesale shirts for private labels.
+      responses:
+        '201':
+          description: Product listing created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Validation failed.
+        '401':
+          description: Unauthorized or role is not supplier.
+
+    get:
+      summary: Query Products Catalog
+      description: Fetches active wholesale listings. Supports rich filtering by manufacturing cluster hub, category, and text search queries.
+      parameters:
+        - name: hub
+          in: query
+          description: Manufacturing cluster identifier.
+          required: false
+          schema:
+            type: string
+            example: surat
+        - name: category
+          in: query
+          description: Category filter.
+          required: false
+          schema:
+            type: string
+            example: Textiles & Garments
+        - name: search
+          in: query
+          description: Text match query against name and description.
+          required: false
+          schema:
+            type: string
+            example: Silk
+        - name: limit
+          in: query
+          description: Maximum number of records to return.
+          required: false
+          schema:
+            type: integer
+            default: 10
+            example: 10
+        - name: offset
+          in: query
+          description: Number of records to skip.
+          required: false
+          schema:
+            type: integer
+            default: 0
+            example: 0
+        - name: cursor
+          in: query
+          description: Reference ID for cursor-based pagination.
+          required: false
+          schema:
+            type: string
+            example: p2
+        - name: sortBy
+          in: query
+          description: Field name to sort by.
+          required: false
+          schema:
+            type: string
+            enum: [id, name, moq, weight, createdAt]
+            default: id
+        - name: sortOrder
+          in: query
+          description: Sort order direction.
+          required: false
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: DESC
+        - name: moqMin
+          in: query
+          description: Minimum MOQ bounds constraint.
+          required: false
+          schema:
+            type: integer
+            example: 100
+        - name: moqMax
+          in: query
+          description: Maximum MOQ bounds constraint.
+          required: false
+          schema:
+            type: integer
+            example: 1000
+        - name: priceMin
+          in: query
+          description: Minimum unit price tier bounds constraint.
+          required: false
+          schema:
+            type: number
+            example: 100
+        - name: priceMax
+          in: query
+          description: Maximum unit price tier bounds constraint.
+          required: false
+          schema:
+            type: number
+            example: 500
+        - name: weightMin
+          in: query
+          description: Minimum weight bounds constraint.
+          required: false
+          schema:
+            type: number
+            example: 0.1
+        - name: weightMax
+          in: query
+          description: Maximum weight bounds constraint.
+          required: false
+          schema:
+            type: number
+            example: 10.0
+      responses:
+        '200':
+          description: List of products matching filters.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /api/v1/products/{id}:
+    get:
+      summary: Retrieve Product Details
+      description: Returns complete specifications, images, and tiered volume price charts for a specific product ID.
+      parameters:
+        - name: id
+          in: path
+          description: Unique database identifier of the product.
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Detailed product specs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetail'
+        '404':
+          description: Product not found.
+
+  /api/v1/rfqs:
+    post:
+      summary: Broadcast Sourcing Requirement (RFQ)
+      description: Broadcasts a new RFQ sourcing requirement to all suppliers. Gated; requires a registered Buyer account with completed Aadhaar KYC verification.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - category
+                - quantity
+                - targetPrice
+                - description
+              properties:
+                title:
+                  type: string
+                  example: Sourcing 5,000 Squm Vitrified Floor Tiles
+                category:
+                  type: string
+                  example: Home & Ceramics
+                quantity:
+                  type: integer
+                  example: 5000
+                targetPrice:
+                  type: number
+                  example: 300
+                description:
+                  type: string
+                  example: Looking for glossy finished vitrified floor tiles of size 600x1200mm.
+      responses:
+        '201':
+          description: RFQ successfully broadcasted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RFQ'
+        '400':
+          description: Validation error.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden. Requires completed DigiLocker Aadhaar KYC validation.
+
+    get:
+      summary: Retrieve Open RFQ Feeds
+      description: Fetches a list of all active sourcing requirements available for supplier bids. Supports standardized pagination, sorting, and filtering options.
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of records to return.
+          required: false
+          schema:
+            type: integer
+            default: 10
+            example: 10
+        - name: offset
+          in: query
+          description: Number of records to skip.
+          required: false
+          schema:
+            type: integer
+            default: 0
+            example: 0
+        - name: cursor
+          in: query
+          description: Reference ID for cursor-based pagination.
+          required: false
+          schema:
+            type: string
+            example: 1
+        - name: sortBy
+          in: query
+          description: Field name to sort by.
+          required: false
+          schema:
+            type: string
+            enum: [id, title, quantity, targetPrice, createdAt]
+            default: id
+        - name: sortOrder
+          in: query
+          description: Sort order direction.
+          required: false
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: DESC
+        - name: category
+          in: query
+          description: Category filter.
+          required: false
+          schema:
+            type: string
+            example: Textiles & Garments
+        - name: search
+          in: query
+          description: Text search matching title or description.
+          required: false
+          schema:
+            type: string
+            example: Hoodies
+        - name: qtyMin
+          in: query
+          description: Minimum quantity bounds constraint.
+          required: false
+          schema:
+            type: integer
+            example: 100
+        - name: qtyMax
+          in: query
+          description: Maximum quantity bounds constraint.
+          required: false
+          schema:
+            type: integer
+            example: 10000
+        - name: targetPriceMin
+          in: query
+          description: Minimum target price bounds constraint.
+          required: false
+          schema:
+            type: number
+            example: 100
+        - name: targetPriceMax
+          in: query
+          description: Maximum target price bounds constraint.
+          required: false
+          schema:
+            type: number
+            example: 500
+      responses:
+        '200':
+          description: Active RFQ listings.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RFQ'
+
+  /api/v1/rfqs/{id}/bids:
+    post:
+      summary: Submit Supplier Bid
+      description: Places a competitive quotation bid on an open RFQ feed. Gated; restricted to approved Suppliers.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Unique database identifier of the RFQ.
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - bidPrice
+                - logisticsTerms
+              properties:
+                bidPrice:
+                  type: number
+                  example: 290
+                logisticsTerms:
+                  type: string
+                  example: Ready stock, ex-factory Surat dispatch.
+      responses:
+        '201':
+          description: Bid submitted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bid'
+        '400':
+          description: Validation failed.
+        '401':
+          description: Unauthorized or role is not supplier.
+        '404':
+          description: RFQ not found.
+
+  /api/v1/orders:
+    post:
+      summary: Calculate and Register SafeTrade Escrow Order
+      description: |
+        Processes bulk order transactions.
+        Communicates synchronously with the high-performance Go Calculations service to calculate quantity tier discounts, classify interstate/intrastate taxation types (CGST/SGST/IGST), compute weight-based carriage freight, and register a secure SafeTrade escrow contract.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+                - buyerState
+                - carrier
+                - paymentMethod
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - productId
+                      - quantity
+                    properties:
+                      productId:
+                        type: integer
+                        example: 1
+                      quantity:
+                        type: integer
+                        example: 1000
+                buyerState:
+                  type: string
+                  example: Maharashtra
+                carrier:
+                  type: string
+                  enum: [vtrans, safexpress, TCI]
+                  example: vtrans
+                paymentMethod:
+                  type: string
+                  enum: [NEFT, RTGS, IMPS, Escrow_Gateway]
+                  example: NEFT
+      responses:
+        '201':
+          description: Order calculated and SafeTrade escrow registered.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: ORD-98721
+                  suborders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SubOrder'
+                  message:
+                    type: string
+                    example: SafeTrade contract split into 1 sub-orders successfully via NEFT.
+        '400':
+          description: Invalid payload, negative quantities, or invalid state.
+        '401':
+          description: Unauthorized.
+
+    get:
+      summary: Retrieve Orders List
+      description: Returns a list of all historical escrow transactions associated with the active user session.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of orders.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+        '401':
+          description: Unauthorized.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Hub:
+      type: object
+      properties:
+        id:
+          type: string
+          example: surat
+        name:
+          type: string
+          example: Surat Textile Hub
+        location:
+          type: string
+          example: Gujarat
+        category:
+          type: string
+          example: Textiles & Apparel
+        count:
+          type: string
+          example: 1,420+ Mills
+        icon:
+          type: string
+          example: "🧵"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Kunal Sen
+        email:
+          type: string
+          example: buyer@inditrade.com
+        role:
+          type: string
+          enum: [buyer, supplier, admin]
+          example: buyer
+        sellerStatus:
+          type: string
+          enum: [none, pending_docs, pending_approval, approved]
+          example: none
+        isKycVerified:
+          type: boolean
+          example: false
+        location:
+          type: string
+          example: Mumbai, Maharashtra
+        state:
+          type: string
+          example: Maharashtra
+        supplierId:
+          type: integer
+          nullable: true
+          example: null
+
+    Supplier:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Gujarat Handloom & Silk Weaves
+        location:
+          type: string
+          example: Surat, Gujarat
+        state:
+          type: string
+          example: Gujarat
+        joined:
+          type: string
+          example: Joined Today
+        trustScore:
+          type: string
+          example: 98%
+        responseTime:
+          type: string
+          example: "< 2 Hours"
+        gstin:
+          type: string
+          example: 24AAAFF1234F1Z5
+        iso:
+          type: string
+          example: ISO 9001:2015
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Pure Banarasi Silk Designer Saree Collection
+        category:
+          type: string
+          example: Textiles & Garments
+        hub:
+          type: string
+          example: surat
+        weightPerUnit:
+          type: number
+          example: 0.8
+        image:
+          type: string
+          example: https://images.unsplash.com/photo-1610030469983-98e550d6193c
+        hsn:
+          type: string
+          example: "50072010"
+        moq:
+          type: integer
+          example: 100
+        supplierId:
+          type: integer
+          example: 1
+        priceTiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/PriceTier'
+
+    ProductDetail:
+      allOf:
+        - $ref: '#/components/schemas/Product'
+        - type: object
+          properties:
+            description:
+              type: string
+              example: Exquisite Banarasi sarees made with rich golden zari borders.
+            images:
+              type: string
+              example: https://images.unsplash.com/photo-1610030469983-98e550d6193c,https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b"
+            unit:
+              type: string
+              example: Pieces
+            leadTime:
+              type: string
+              example: 15 days (Under 500 pcs)
+            Supplier:
+              $ref: '#/components/schemas/Supplier'
+
+    PriceTier:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        min:
+          type: integer
+          example: 100
+        max:
+          type: integer
+          nullable: true
+          example: 299
+        price:
+          type: number
+          example: 850
+
+    RFQ:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Sourcing 5,000 Squm Vitrified Floor Tiles
+        category:
+          type: string
+          example: Home & Ceramics
+        quantity:
+          type: integer
+          example: 5000
+        unit:
+          type: string
+          example: Pieces
+        targetPrice:
+          type: number
+          example: 300
+        buyerName:
+          type: string
+          example: Kunal Sen
+        buyerLocation:
+          type: string
+          example: Mumbai, Maharashtra
+        datePosted:
+          type: string
+          example: 2 hours ago
+        description:
+          type: string
+          example: Looking for glossy finished vitrified floor tiles of size 600x1200mm.
+        status:
+          type: string
+          example: "Active (1 Bids)"
+        Bids:
+          type: array
+          items:
+            $ref: '#/components/schemas/Bid'
+
+    Bid:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        rfqId:
+          type: integer
+          example: 1
+        supplierName:
+          type: string
+          example: Surat Handloom Mills Ltd
+        bidPrice:
+          type: number
+          example: 290
+        logisticsTerms:
+          type: string
+          example: Ready stock, ex-factory Surat dispatch.
+
+    SubOrder:
+      type: object
+      properties:
+        orderCode:
+          type: string
+          example: ORD-98721-1
+        productName:
+          type: string
+          example: Pure Banarasi Silk Designer Saree Collection
+        quantity:
+          type: integer
+          example: 1000
+        subtotal:
+          type: number
+          example: 600000
+        tax:
+          type: number
+          example: 108000
+        freight:
+          type: number
+          example: 4800
+        total:
+          type: number
+          example: 712800
+        supplierId:
+          type: integer
+          example: 1
+        supplierState:
+          type: string
+          example: Gujarat
+        taxType:
+          type: string
+          example: IGST (18%)
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        orderCode:
+          type: string
+          example: ORD-9872
+        productName:
+          type: string
+          example: Premium Double Charge Polished Vitrified Floor Tiles
+        buyerName:
+          type: string
+          example: Kunal Builders (Mumbai)
+        quantity:
+          type: integer
+          example: 1500
+        subtotal:
+          type: number
+          example: 510000
+        tax:
+          type: number
+          example: 91800
+        freight:
+          type: number
+          example: 130500
+        total:
+          type: number
+          example: 732300
+        status:
+          type: string
+          example: Escrow Funded
+        dateCreated:
+          type: string
+          example: Yesterday

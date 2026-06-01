@@ -1,0 +1,143 @@
+version: '3.8'
+
+services:
+  # 1. Relational Database Layer (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: buyeway-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-buyeway}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d buyeway"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - buyeway-net
+
+  # 2. Redis Cache Layer
+  redis:
+    image: redis:7-alpine
+    container_name: buyeway-redis
+    restart: always
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - buyeway-net
+
+  # 3. Sizing Calculations Microservice (Go)
+  go-compute:
+    build:
+      context: ./compute-service-go
+    container_name: buyeway-go-compute
+    restart: always
+    environment:
+      - PORT=8080
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - buyeway-net
+
+  # 4. Express API Gateway (Node)
+  node-gateway:
+    build:
+      context: ./gateway-nestjs
+      args:
+        NODE_ENV: production
+    container_name: buyeway-node-gateway
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - COMPUTE_SERVICE_URL=http://go-compute:8080
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_SSL=${DATABASE_SSL:-false}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      db:
+        condition: service_healthy
+      go-compute:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - buyeway-net
+
+  # 5. Next.js App Router Storefront
+  nextjs-storefront:
+    build:
+      context: ./storefront-nextjs
+      args:
+        NODE_ENV: production
+        NEXT_PUBLIC_GATEWAY_URL: http://localhost:8000/api/v1
+        NEXT_PUBLIC_COMPUTE_URL: http://localhost:8080
+    container_name: buyeway-nextjs-storefront
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_GATEWAY_URL=http://localhost:8000/api/v1
+      - NEXT_PUBLIC_COMPUTE_URL=http://localhost:8080
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      node-gateway:
+        condition: service_healthy
+    networks:
+      - buyeway-net
+
+  # 6. Production Reverse Proxy Ingress (Nginx)
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: buyeway-nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      node-gateway:
+        condition: service_healthy
+      nextjs-storefront:
+        condition: service_healthy
+    networks:
+      - buyeway-net
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  buyeway-net:
+    driver: bridge

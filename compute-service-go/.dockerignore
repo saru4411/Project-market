@@ -1,0 +1,6 @@
+# Docker Ignore - Go Calculations Service
+.git
+.gitignore
+.DS_Store
+Dockerfile
+docker-compose.yml

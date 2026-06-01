@@ -1,0 +1,11 @@
+# Docker Ignore - Express Gateway Service
+node_modules
+npm-debug.log*
+.git
+.gitignore
+.env
+.env.local
+coverage/
+.DS_Store
+Dockerfile
+docker-compose.yml

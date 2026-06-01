@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ── Gateway (Node.js) tests ──────────────────────────────────────────────────
+  gateway-tests:
+    name: Gateway — Node.js Tests
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: ./gateway-nestjs
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: gateway-nestjs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test_secret_ci_only
+          DATABASE_URL: sqlite::memory:
+          REDIS_URL: redis://localhost:6379
+          LOG_LEVEL: silent
+        run: npm test
+
+  # ── Compute Service (Go) tests ───────────────────────────────────────────────
+  compute-tests:
+    name: Compute Service — Go Tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./compute-service-go
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Run Go tests
+        run: go test ./... -v -race -timeout 30s
+
+  # ── Docker build validation ──────────────────────────────────────────────────
+  docker-build:
+    name: Docker Build Validation
+    runs-on: ubuntu-latest
+    needs: [gateway-tests, compute-tests]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build gateway image
+        run: docker build -t inditrade-gateway:ci ./gateway-nestjs
+
+      - name: Build compute image
+        run: docker build -t inditrade-compute:ci ./compute-service-go
+
+      - name: Build storefront image
+        run: docker build -t inditrade-storefront:ci ./storefront-nextjs

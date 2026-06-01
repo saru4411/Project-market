@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IndiTrade - India's Premier B2B Wholesale Sourcing Marketplace (Alibaba for India)</title>
+  <meta name="description" content="IndiTrade is a premium Indian B2B wholesale marketplace connecting verified Indian manufacturers, factory clusters, and global buyers. Sourced from Morbi, Surat, Tirupur, and Aligarh.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <div class="logo-wrapper">
+        <div class="logo-icon">I</div>
+        <span>IndiTrade</span>
+      </div>
+
+      <!-- Sourcing Hub Search -->
+      <div class="search-container">
+        <select class="search-hub-select" id="hub-filter-select">
+          <option value="">All Indian Hubs</option>
+          <option value="surat">Surat Textile Hub</option>
+          <option value="morbi">Morbi Ceramic Hub</option>
+          <option value="tirupur">Tirupur Apparel</option>
+          <option value="aligarh">Aligarh Hardware</option>
+          <option value="assam">Assam Tea</option>
+          <option value="moradabad">Moradabad Brass</option>
+        </select>
+        <input type="text" class="search-input" id="global-search" placeholder="Search by product, HSN code, or Indian manufacturing hub...">
+        <button class="search-button" id="btn-global-search">
+          <svg style="width: 16px; height: 16px; fill:currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          Sourcing Search
+        </button>
+      </div>
+
+      <!-- Navigation & Actions -->
+      <div class="nav-actions">
+        <a href="#home" class="nav-link active">Marketplace</a>
+        <a href="#rfqs" class="nav-link">
+          RFQ Feed
+          <span class="badge-pill" id="header-rfq-count">0</span>
+        </a>
+        <a href="#supplier-dashboard" class="nav-link" id="supplier-link" style="display:none">Supplier Hub</a>
+        <button class="btn-supplier-toggle" id="role-toggle-btn">Supplier Hub</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Portal Workspace -->
+  <main>
+
+    <!-- 1. Home / Sourcing Marketplace View -->
+    <div id="home-view" class="view-section active">
+      
+      <!-- Premium B2B Hero Banner -->
+      <div class="hero-banner">
+        <div class="hero-text">
+          <span class="hero-tag">A Premier B2B Initiative</span>
+          <h1 class="hero-title">Direct Sourcing From India's Mega Manufacturing Hubs</h1>
+          <p class="hero-desc">Connecting global bulk buyers with verified Indian factories, MSMEs, and craft clusters. Verified GSTIN profiles, volume-discounted price tiers, and secure logistics.</p>
+          <div class="hero-actions">
+            <a href="#rfqs" class="btn-primary">
+              <svg style="width: 18px; height: 18px; fill:currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              Post a Sourcing RFQ
+            </a>
+            <a href="#home" class="btn-secondary" onclick="document.getElementById('products-section-header').scrollIntoView({behavior:'smooth'})">Explore Wholesale Catalogues</a>
+          </div>
+        </div>
+        
+        <div class="hero-stats">
+          <div class="stat-box">
+            <div class="stat-num">5,800+</div>
+            <div class="stat-lbl">Verified Factories</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num">1.4L+</div>
+            <div class="stat-lbl">Active Buyers</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num">₹9.2 Cr</div>
+            <div class="stat-lbl">Trade Volume</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sourcing Hub Clusters -->
+      <div class="section-title-wrapper">
+        <div>
+          <h2 class="section-title">Browse Iconic Sourcing Clusters</h2>
+          <p class="section-subtitle">Source directly from specialized geographic manufacturing ecosystems in India.</p>
+        </div>
+      </div>
+      <div class="hubs-grid" id="sourcing-hubs-grid">
+        <!-- Loaded Dynamically by app.js -->
+      </div>
+
+      <!-- Marketplace Listings layout -->
+      <div class="section-title-wrapper" id="products-section-header">
+        <div>
+          <h2 class="section-title">Verified Indian Wholesale Listings</h2>
+          <p class="section-subtitle">Ex-Factory tiered pricing, standard HSN classifications, and guaranteed minimum orders.</p>
+        </div>
+      </div>
+
+      <div class="products-layout">
+        <!-- Sidebar filters -->
+        <aside class="filter-sidebar">
+          <div class="filter-group">
+            <h4 class="filter-group-title">Sourcing Categories</h4>
+            <label class="filter-option">
+              <input type="checkbox" class="filter-checkbox" value="Textiles & Garments">
+              Textiles & Garments
+            </label>
+            <label class="filter-option">
+              <input type="checkbox" class="filter-checkbox" value="Home & Ceramics">
+              Home & Ceramics
+            </label>
+            <label class="filter-option">
+              <input type="checkbox" class="filter-checkbox" value="Hardware & Tools">
+              Hardware & Tools
+            </label>
+            <label class="filter-option">
+              <input type="checkbox" class="filter-checkbox" value="Agriculture & Food">
+              Agriculture & Food
+            </label>
+          </div>
+
+          <div class="filter-group">
+            <h4 class="filter-group-title">Verification Badges</h4>
+            <label class="filter-option">
+              <input type="checkbox" class="filter-checkbox" value="verified-gst" checked disabled>
+              GST Registered
+            </label>
+            <label class="filter-option">
+              <input type="checkbox" class="filter-checkbox" value="iso-certified">
+              ISO Certified Plants
+            </label>
+          </div>
+
+          <div class="filter-group">
+            <h4 class="filter-group-title">Sourcing Security</h4>
+            <div style="background: rgba(var(--accent-rgb),0.04); border:1px solid var(--border); border-radius: var(--radius-sm); padding:0.75rem; font-size:0.8rem; line-height: 1.4; color:var(--text-secondary)">
+              <span style="color:var(--accent); font-weight:700">SafeTrade Guarantee</span><br>
+              Escrow payment facilities available. Freight matching by India's top logistics aggregates.
+            </div>
+          </div>
+        </aside>
+
+        <!-- Products listings grid -->
+        <div class="products-grid" id="products-grid">
+          <!-- Loaded Dynamically by app.js -->
+        </div>
+      </div>
+
+      <!-- Quick Fast Sourcing Form -->
+      <div style="background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%); border:1px solid var(--border); border-radius:var(--radius-lg); padding:3rem; margin-top:4rem; display:flex; justify-content:space-between; align-items:center; gap:3rem">
+        <div style="max-width: 45%">
+          <h2 style="font-size:2rem; font-weight:700; margin-bottom:0.75rem">Can't Find a Particular Wholesale Product?</h2>
+          <p style="color:var(--text-secondary); font-size:1rem; line-height:1.6">Post your exact sourcing specifications on our RFQ market board. Match with certified Indian mills and secure custom wholesale quotes within hours.</p>
+        </div>
+        <form id="fast-rfq-form" style="flex:1; background:var(--bg-primary); border:1px solid var(--border); border-radius:var(--radius-md); padding:2rem; display:flex; flex-direction:column; gap:1rem">
+          <div style="font-weight:700; font-size:1.1rem; border-bottom:1px solid var(--border-light); padding-bottom:0.5rem">Fast Buyer Sourcing RFQ</div>
+          <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:1rem">
+            <input type="text" id="fast-rfq-product" class="form-input" style="background:var(--bg-tertiary); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.7rem; font-size:0.85rem" placeholder="What item do you need? (e.g. Surat Cotton Bed Sheets)" required>
+            <input type="number" id="fast-rfq-qty" class="form-input" style="background:var(--bg-tertiary); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.7rem; font-size:0.85rem" placeholder="Quantity Needed" required min="1">
+          </div>
+          <textarea id="fast-rfq-desc" class="form-input form-textarea" style="background:var(--bg-tertiary); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.7rem; font-size:0.85rem; min-height:80px" placeholder="Details (e.g., fabric weave, size, shipping destination city)..."></textarea>
+          <button type="submit" class="btn-primary" style="justify-content:center; padding:0.7rem">Broadcast RFQ Sourcing Request</button>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- 2. Dynamic Product Detail View -->
+    <div id="product-detail-view" class="view-section">
+      <!-- Loaded dynamically by app.js based on selected product -->
+    </div>
+
+    <!-- 3. RFQ Sourcing Marketplace Portal -->
+    <div id="rfqs-view" class="view-section">
+      <div class="rfq-layout">
+        <!-- RFQ Submission Form Panel -->
+        <div class="rfq-post-container">
+          <h2 class="form-title">Broadcast Sourcing Request (RFQ)</h2>
+          <form id="full-rfq-form">
+            <div class="form-group">
+              <label class="form-label">Sourcing Product / Requirement Name *</label>
+              <div class="form-input-wrapper">
+                <input type="text" class="form-input" id="rfq-form-title" placeholder="e.g. Sourcing 10,000 meters Premium Raw Silk Yarn" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Category Classification *</label>
+              <div class="form-input-wrapper">
+                <select class="form-select" id="rfq-form-cat" required>
+                  <option value="Textiles & Garments">Textiles & Garments</option>
+                  <option value="Home & Ceramics">Home & Ceramics</option>
+                  <option value="Hardware & Tools">Hardware & Tools</option>
+                  <option value="Agriculture & Food">Agriculture & Food</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem">
+              <div class="form-group">
+                <label class="form-label">Quantity Needed *</label>
+                <div class="form-input-wrapper">
+                  <input type="number" class="form-input" id="rfq-form-qty" placeholder="e.g. 5000" required min="1">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Metric Unit *</label>
+                <div class="form-input-wrapper">
+                  <select class="form-select" id="rfq-form-unit" required>
+                    <option value="Pieces">Pieces</option>
+                    <option value="Meters">Meters</option>
+                    <option value="Kg">Kg</option>
+                    <option value="Sqm">Sqm (Tiles)</option>
+                    <option value="Sets">Sets</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:1.25rem">
+              <div class="form-group">
+                <label class="form-label">Target Budget Price *</label>
+                <div class="form-input-wrapper">
+                  <span class="form-prefix">₹</span>
+                  <input type="number" class="form-input" id="rfq-form-price" placeholder="Target per unit" required min="1">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Your Business GSTIN (Optional)</label>
+                <div class="form-input-wrapper">
+                  <input type="text" class="form-input" id="rfq-form-gstin" placeholder="15-digit GSTIN (simulated verification)">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Technical Specs & Packaging Details *</label>
+              <textarea class="form-input form-textarea" id="rfq-form-desc" placeholder="Specify colorways, thread count, materials, certified test guidelines, delivery timelines, and logistics terms..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.9rem">
+              Launch Sourcing RFQ to Marketplace
+            </button>
+          </form>
+        </div>
+
+        <!-- RFQ Marketplace Live Feed -->
+        <div>
+          <h2 style="font-size:1.75rem; font-weight:700; margin-bottom:0.25rem">Active Sourcing Feed</h2>
+          <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem">Indian factory suppliers actively review this feed to submit commercial bid quotes.</p>
+          
+          <div class="rfq-cards-list" id="rfq-marketplace-feed">
+            <!-- Loaded dynamically by app.js -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Supplier Dashboard & Onboarding Portal -->
+    <div id="supplier-dashboard-view" class="view-section">
+      
+      <!-- Supplier Active Session Selector Simulator -->
+      <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; gap:2rem">
+        <div>
+          <h3 style="font-size:1.15rem; font-weight:700; color:var(--accent)">🏢 Active Supplier Session Workspace</h3>
+          <p style="color:var(--text-secondary); font-size:0.75rem">Select a registered supplier entity below to view their isolated wholesale catalog, direct customer inquiries, and funded escrow contracts.</p>
+        </div>
+        <div class="form-input-wrapper" style="max-width:350px; flex:1">
+          <select class="form-select" id="active-supplier-session-select" style="padding:0.6rem; font-size:0.85rem">
+            <!-- Populated dynamically by app.js -->
+          </select>
+        </div>
+      </div>
+
+      <!-- Sourcing Hub Stats -->
+      <div class="supplier-dash-layout">
+        <div class="dash-stat-card">
+          <div class="dash-icon-box">📊</div>
+          <div class="dash-stat-info">
+            <div class="dash-stat-num" id="dash-total-sales">₹0</div>
+            <div class="dash-stat-label">Sales Transactions</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-icon-box orange">📈</div>
+          <div class="dash-stat-info">
+            <div class="dash-stat-num">14</div>
+            <div class="dash-stat-label">Active Sourcing Bids</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-icon-box green">💬</div>
+          <div class="dash-stat-info">
+            <div class="dash-stat-num">2 New</div>
+            <div class="dash-stat-label">Inquiries Received</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-icon-box">🔐</div>
+          <div class="dash-stat-info">
+            <div class="dash-stat-num">Verified</div>
+            <div class="dash-stat-label">GST & ISO Status</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form and Inquiry Columns -->
+      <div class="supplier-sections-grid">
+        
+        <!-- Left: Onboarding Card and Product listing form -->
+        <div style="display:flex; flex-direction:column; gap:2rem">
+          
+          <!-- 1. Supplier Entity Onboarding Card -->
+          <div style="background:linear-gradient(135deg, rgba(var(--accent-rgb),0.1) 0%, rgba(var(--primary-rgb),0.05) 100%); border:1px solid var(--accent); border-radius:var(--radius-lg); padding:2rem">
+            <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.5rem">
+              <span>🏢</span> MSME Supplier Onboarding Portal
+            </h3>
+            <p style="color:var(--text-secondary); font-size:0.8rem; line-height: 1.4; margin-bottom:1.25rem">Onboard your manufacturing unit, verify your GSTIN credentials, and immediately begin listing ex-factory wholesale products.</p>
+            
+            <form id="supplier-register-form" style="display:flex; flex-direction:column; gap:0.85rem">
+              <input type="text" id="reg-sup-name" class="form-input" placeholder="Company / Mill Name *" required style="background:var(--bg-primary); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.6rem; font-size:0.8rem">
+              <input type="text" id="reg-sup-location" class="form-input" placeholder="City Location (e.g. Surat, Gujarat) *" required style="background:var(--bg-primary); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.6rem; font-size:0.8rem">
+              
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem">
+                <select id="reg-sup-state" class="form-select" style="background:var(--bg-primary); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.6rem; font-size:0.8rem; color:var(--text-secondary)">
+                  <option value="Gujarat">Gujarat</option>
+                  <option value="Maharashtra">Maharashtra</option>
+                  <option value="Tamil Nadu">Tamil Nadu</option>
+                  <option value="Uttar Pradesh">Uttar Pradesh</option>
+                  <option value="Assam">Assam</option>
+                  <option value="Delhi">Delhi</option>
+                  <option value="Karnataka">Karnataka</option>
+                </select>
+                <input type="text" id="reg-sup-iso" class="form-input" placeholder="ISO/MSME Certs" style="background:var(--bg-primary); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.6rem; font-size:0.8rem">
+              </div>
+
+              <input type="text" id="reg-sup-gstin" class="form-input" placeholder="15-digit Sourcing GSTIN *" required style="background:var(--bg-primary); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.6rem; font-size:0.8rem">
+              <button type="submit" class="btn-primary" style="justify-content:center; padding:0.5rem; font-size:0.8rem">Register Sourcing Entity</button>
+            </form>
+          </div>
+
+          <!-- 2. Product Listing Form -->
+          <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem">
+            <h3 style="font-size:1.25rem; font-weight:700; margin-bottom:1.25rem; border-bottom:1px solid var(--border-light); padding-bottom:0.5rem">List a New Bulk Product</h3>
+            <form id="supplier-add-product-form">
+              <div class="form-group">
+                <label class="form-label">Associate Supplier Profile *</label>
+                <div class="form-input-wrapper">
+                  <select class="form-select" id="new-p-supplier-id" required>
+                    <!-- Populated dynamically by app.js -->
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Wholesale Product Name *</label>
+                <div class="form-input-wrapper">
+                  <input type="text" class="form-input" id="new-p-name" placeholder="e.g. Surat Synthetic Silk Yarn Pack" required>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem">
+                <div class="form-group">
+                  <label class="form-label">Sourcing Category *</label>
+                  <div class="form-input-wrapper">
+                    <select class="form-select" id="new-p-cat" required>
+                      <option value="Textiles & Garments">Textiles & Garments</option>
+                      <option value="Home & Ceramics">Home & Ceramics</option>
+                      <option value="Hardware & Tools">Hardware & Tools</option>
+                      <option value="Agriculture & Food">Agriculture & Food</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Manufacturing Hub *</label>
+                  <div class="form-input-wrapper">
+                    <select class="form-select" id="new-p-hub" required>
+                      <option value="surat">Surat Sourcing Hub</option>
+                      <option value="morbi">Morbi Ceramic Hub</option>
+                      <option value="tirupur">Tirupur Garment Cluster</option>
+                      <option value="aligarh">Aligarh Hardware Hub</option>
+                      <option value="assam">Assam Tea Plantations</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1.2fr; gap:1rem">
+                <div class="form-group">
+                  <label class="form-label">MOQ Size *</label>
+                  <div class="form-input-wrapper">
+                    <input type="number" class="form-input" id="new-p-moq" placeholder="e.g. 500" required min="1">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Packaging Metric *</label>
+                  <div class="form-input-wrapper">
+                    <select class="form-select" id="new-p-unit" required>
+                      <option value="Pieces">Pieces</option>
+                      <option value="Meters">Meters</option>
+                      <option value="Kg">Kg</option>
+                      <option value="Sqm">Sqm</option>
+                      <option value="Sets">Sets</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem">
+                <div class="form-group">
+                  <label class="form-label">High-Tier Price (MOQ) *</label>
+                  <div class="form-input-wrapper">
+                    <span class="form-prefix">₹</span>
+                    <input type="number" class="form-input" id="new-p-price-max" placeholder="e.g. 150" required min="1">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Low-Tier Price (Bulk) *</label>
+                  <div class="form-input-wrapper">
+                    <span class="form-prefix">₹</span>
+                    <input type="number" class="form-input" id="new-p-price-min" placeholder="e.g. 110" required min="1">
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:1rem">
+                <div class="form-group">
+                  <label class="form-label">HSN classification code</label>
+                  <div class="form-input-wrapper">
+                    <input type="text" class="form-input" id="new-p-hsn" placeholder="e.g. 52051110">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Unit Weight (Kg) *</label>
+                  <div class="form-input-wrapper">
+                    <input type="number" class="form-input" id="new-p-weight" placeholder="Weight" required step="0.1" value="1.0">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Product Specs & description *</label>
+                <textarea class="form-input form-textarea" id="new-p-desc" style="min-height:80px" placeholder="Specify technical grades, finishes, weight parameters..." required></textarea>
+              </div>
+
+              <button type="submit" class="btn-primary" style="width:100%; justify-content:center">List Bulk Product to Directory</button>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- Right: Leads & Orders -->
+        <div>
+          <h3 style="font-size:1.5rem; font-weight:700; margin-bottom:0.25rem">Wholesale Lead Management Box</h3>
+          <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:1.25rem">Direct RFQ quote messages received from buyers on your catalog items.</p>
+          
+          <div id="supplier-inquiries-list">
+            <!-- Loaded dynamically by app.js -->
+          </div>
+
+          <h3 style="font-size:1.5rem; font-weight:700; margin-top:2.5rem; margin-bottom:0.25rem">SafeTrade Escrow Orders</h3>
+          <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:1.25rem">Secured wholesale trade contracts pending factory dispatch.</p>
+          
+          <div id="supplier-orders-feed" style="margin-bottom:2.5rem">
+            <!-- Loaded dynamically by app.js -->
+          </div>
+
+          <h3 style="font-size:1.25rem; font-weight:700; margin-top:2.5rem; margin-bottom:1rem">Your Active Marketplace Listings</h3>
+          <div style="background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-md); overflow-x:auto">
+            <table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.85rem">
+              <thead>
+                <tr style="background:var(--bg-tertiary); border-bottom:1px solid var(--border)">
+                  <th style="padding:1rem">Product Listing</th>
+                  <th style="padding:1rem">Category</th>
+                  <th style="padding:1rem">Price Scale</th>
+                  <th style="padding:1rem">MOQ</th>
+                  <th style="padding:1rem">Status</th>
+                </tr>
+              </thead>
+              <tbody id="supplier-product-table-body">
+                <!-- Loaded dynamically by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Global Modal Popup Frame -->
+  <div id="global-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">B2B Quotation Action</h3>
+        <span class="close-btn">&times;</span>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Loaded dynamically based on action -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div>
+        <div class="logo-wrapper">
+          <div class="logo-icon">I</div>
+          <span>IndiTrade</span>
+        </div>
+        <p class="footer-col-desc">Connecting Indian manufacturers and mega factory clusters directly with wholesale retail buyers. Supporting the Make in India B2B supply pipeline.</p>
+      </div>
+
+      <div>
+        <h4 class="footer-title">Major Sourcing Hubs</h4>
+        <ul class="footer-links">
+          <li class="footer-link-item"><a href="#home" class="footer-link">Surat Synthetic Textiles</a></li>
+          <li class="footer-link-item"><a href="#home" class="footer-link">Morbi Premium Ceramics</a></li>
+          <li class="footer-link-item"><a href="#home" class="footer-link">Tirupur Apparel & Hosiery</a></li>
+          <li class="footer-link-item"><a href="#home" class="footer-link">Aligarh Brass Hardware</a></li>
+          <li class="footer-link-item"><a href="#home" class="footer-link">Assam Quality Tea</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="footer-title">Bulk Trade Services</h4>
+        <ul class="footer-links">
+          <li class="footer-link-item"><a href="#rfqs" class="footer-link">Request For Quote (RFQ) Marketplace</a></li>
+          <li class="footer-link-item"><a href="#home" class="footer-link">SafeTrade Escrow Protections</a></li>
+          <li class="footer-link-item"><a href="#home" class="footer-link">Logistics & Freight Quotes</a></li>
+          <li class="footer-link-item"><a href="#home" class="footer-link">GSTIN Compliance Registry</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="footer-title">Indian Trade Rules</h4>
+        <div style="font-size:0.8rem; color:var(--text-secondary); line-height: 1.5">
+          Standardized trade compliance under HSN classification. GST taxation rules apply automatically based on interstate or intrastate wholesale contracts.
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; 2026 IndiTrade B2B Marketplace. All rights reserved. Sourced & manufactured in India.</span>
+      <div style="display:flex; gap:1.5rem">
+        <a href="#home" class="footer-link">Terms of Use</a>
+        <a href="#home" class="footer-link">Privacy Policy</a>
+        <a href="#home" class="footer-link">MSME Sourcing Regulations</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- App Core JavaScript Integration -->
+  <script src="app.js"></script>
+</body>
+</html>
